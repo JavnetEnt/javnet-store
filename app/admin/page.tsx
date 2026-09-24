@@ -14,6 +14,7 @@ type Product = {
   category_id: string
   brand: string
   image_url: string
+  stock_count: number
 }
 
 export default function AdminPage() {
@@ -23,12 +24,14 @@ export default function AdminPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
 
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [basePrice, setBasePrice] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [brand, setBrand] = useState('')
   const [imageUrl, setImageUrl] = useState('')
+  const [stockCount, setStockCount] = useState('')
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -48,35 +51,70 @@ export default function AdminPage() {
     setProducts(prods ?? [])
   }
 
-  async function handleAddProduct(e: React.FormEvent) {
+  function startEdit(product: Product) {
+    setEditingId(product.id)
+    setName(product.name)
+    setDescription(product.description ?? '')
+    setBasePrice(String(product.base_price))
+    setCategoryId(product.category_id)
+    setBrand(product.brand ?? '')
+    setImageUrl(product.image_url ?? '')
+    setStockCount(String(product.stock_count ?? 0))
+    setMessage('')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setName('')
+    setDescription('')
+    setBasePrice('')
+    setCategoryId('')
+    setBrand('')
+    setImageUrl('')
+    setStockCount('')
+    setMessage('')
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setMessage('')
 
-    const { error } = await supabase.from('products').insert({
+    const payload = {
       name,
       description,
       base_price: Number(basePrice),
       category_id: categoryId,
       brand,
       image_url: imageUrl,
-    })
+      stock_count: Number(stockCount) || 0,
+    }
 
-    if (error) {
-      setMessage('Error: ' + error.message)
+    if (editingId) {
+      const { error } = await supabase.from('products').update(payload).eq('id', editingId)
+      if (error) {
+        setMessage('Error: ' + error.message)
+      } else {
+        setMessage('Product updated!')
+        cancelEdit()
+        loadData()
+      }
     } else {
-      setMessage('Product added!')
-      setName('')
-      setDescription('')
-      setBasePrice('')
-      setBrand('')
-      setImageUrl('')
-      loadData()
+      const { error } = await supabase.from('products').insert(payload)
+      if (error) {
+        setMessage('Error: ' + error.message)
+      } else {
+        setMessage('Product added!')
+        cancelEdit()
+        loadData()
+      }
     }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this product?')) return
     await supabase.from('products').delete().eq('id', id)
+    if (editingId === id) cancelEdit()
     loadData()
   }
 
@@ -88,8 +126,8 @@ export default function AdminPage() {
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-xl font-bold mb-6">Admin — Manage Products</h1>
 
-      <form onSubmit={handleAddProduct} className="space-y-3 border p-4 rounded-lg mb-8">
-        <h2 className="font-semibold">Add New Product</h2>
+      <form onSubmit={handleSubmit} className="space-y-3 border p-4 rounded-lg mb-8">
+        <h2 className="font-semibold">{editingId ? 'Edit Product' : 'Add New Product'}</h2>
         <input
           placeholder="Product name"
           value={name}
@@ -109,6 +147,13 @@ export default function AdminPage() {
           value={basePrice}
           onChange={(e) => setBasePrice(e.target.value)}
           required
+          className="w-full border rounded px-3 py-2"
+        />
+        <input
+          type="number"
+          placeholder="Stock count"
+          value={stockCount}
+          onChange={(e) => setStockCount(e.target.value)}
           className="w-full border rounded px-3 py-2"
         />
         <select
@@ -136,9 +181,20 @@ export default function AdminPage() {
           onChange={(e) => setImageUrl(e.target.value)}
           className="w-full border rounded px-3 py-2"
         />
-        <button type="submit" className="bg-[#E27A12] text-white px-4 py-2 rounded-lg hover:bg-[#c96a0f] transition">
-          Add Product
-        </button>
+        <div className="flex gap-2">
+          <button type="submit" className="bg-[#E27A12] text-white px-4 py-2 rounded-lg hover:bg-[#c96a0f] transition">
+            {editingId ? 'Save Changes' : 'Add Product'}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="border px-4 py-2 rounded-lg hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
         {message && <p className="text-sm">{message}</p>}
       </form>
 
@@ -148,14 +204,24 @@ export default function AdminPage() {
           <div key={p.id} className="flex justify-between items-center border p-3 rounded">
             <div>
               <p className="font-medium">{p.name}</p>
-              <p className="text-sm text-gray-600">₦{Number(p.base_price).toLocaleString()}</p>
+              <p className="text-sm text-gray-600">
+                ₦{Number(p.base_price).toLocaleString()} · Stock: {p.stock_count ?? 0}
+              </p>
             </div>
-            <button
-              onClick={() => handleDelete(p.id)}
-              className="text-red-600 text-sm"
-            >
-              Delete
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => startEdit(p)}
+                className="text-[#E27A12] text-sm hover:underline"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(p.id)}
+                className="text-red-600 text-sm hover:underline"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
