@@ -52,7 +52,17 @@ export default async function ProductPage({
           <p className="text-2xl font-semibold mt-4 text-[#E27A12]">
             ₦{Number(product.base_price).toLocaleString()}
           </p>
-          <p className="text-gray-700 mt-4">{product.description}</p>
+          <ul className="mt-4 space-y-2 text-gray-700">
+          {product.description
+           ?.split('\n')
+           .filter((line: string) => line.trim() !== '')
+           .map((line: string, i: number) => (
+      <li key={i} className="flex gap-2">
+        <span className="text-[#E27A12] mt-1">•</span>
+        <span>{line.trim()}</span>
+      </li>
+    ))}
+</ul>
 
           <AddToCartButton
             id={product.id}

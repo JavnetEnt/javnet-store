@@ -142,10 +142,11 @@ export default function AdminPage() {
           className="w-full border rounded px-3 py-2"
         />
         <textarea
-          placeholder="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full border rounded px-3 py-2"
+         placeholder="Description (one point per line)"
+         value={description}
+         onChange={(e) => setDescription(e.target.value)}
+         rows={5}
+         className="w-full border rounded px-3 py-2"
         />
         <input
           type="number"
