@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/AuthContext'
 
 export default function Header() {
   const { cartCount } = useCart()
-  const { user, signOut } = useAuth()
+  const { user, firstName, signOut } = useAuth()
 
   return (
     <header className="bg-[#221610] text-white">
@@ -35,7 +35,9 @@ export default function Header() {
     <Link href="/orders" className="hover:text-[#E27A12] transition">
       Orders
     </Link>
-    <span className="hidden sm:inline text-gray-300">{user.email}</span>
+    <span className="hidden sm:inline text-gray-300">
+      {firstName ? `Hi, ${firstName}` : user.email}
+    </span>
     <button onClick={() => signOut()} className="hover:text-[#E27A12] transition">
       Sign Out
     </button>

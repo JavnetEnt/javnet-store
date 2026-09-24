@@ -8,13 +8,14 @@ type AuthContextType = {
   user: User | null
   loading: boolean
   isAdmin: boolean
+  firstName: string | null
   signUp: (
-  email: string,
-  password: string,
-  firstName: string,
-  lastName: string,
-  phone: string
-) => Promise<{ error: string | null }>
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    phone: string
+  ) => Promise<{ error: string | null }>
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
 }
@@ -24,16 +25,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
+const [isAdmin, setIsAdmin] = useState(false)
+const [firstName, setFirstName] = useState<string | null>(null)
 
-  async function checkAdmin(userId: string) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', userId)
-      .single()
-    setIsAdmin(data?.is_admin ?? false)
-  }
+async function checkAdmin(userId: string) {
+  const { data } = await supabase
+    .from('profiles')
+    .select('is_admin, first_name')
+    .eq('id', userId)
+    .single()
+  setIsAdmin(data?.is_admin ?? false)
+  setFirstName(data?.first_name ?? null)
+}
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -43,13 +46,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        checkAdmin(session.user.id)
-      } else {
-        setIsAdmin(false)
-      }
-    })
+  setUser(session?.user ?? null)
+  if (session?.user) {
+    checkAdmin(session.user.id)
+  } else {
+    setIsAdmin(false)
+    setFirstName(null)
+  }
+})
 
     return () => listener.subscription.unsubscribe()
   }, [])
@@ -85,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, firstName, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )
