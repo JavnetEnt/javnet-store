@@ -14,7 +14,13 @@ export default function Header() {
       <div className="max-w-6xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="Javnet" width={40} height={40} />
+            <Image
+           src="/logo.png"
+            alt="Javnet"
+             width={40}
+            height={40}
+             className="brightness-0 invert"
+/>
             <div className="leading-tight">
               <p className="font-bold text-sm">Javnet</p>
               <p className="text-xs text-gray-400">Marketplace</p>
