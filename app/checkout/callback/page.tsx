@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useCart } from '@/lib/CartContext'
 
-export default function CheckoutCallback() {
+function CallbackContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { items, removeFromCart } = useCart()
@@ -51,11 +51,19 @@ export default function CheckoutCallback() {
       <p className="mt-2 text-gray-600">Your order has been placed.</p>
       <p className="text-sm text-gray-400 mt-1">Order ID: {orderId}</p>
       <button
-     onClick={() => router.push('/')}
-    className="mt-6 bg-[#E27A12] text-white px-6 py-2 rounded-lg hover:bg-[#c96a0f] transition"
-        >
+        onClick={() => router.push('/')}
+        className="mt-6 bg-[#E27A12] text-white px-6 py-2 rounded-lg hover:bg-[#c96a0f] transition"
+      >
         Continue Shopping
       </button>
     </div>
+  )
+}
+
+export default function CheckoutCallback() {
+  return (
+    <Suspense fallback={<div className="p-6 text-center">Loading...</div>}>
+      <CallbackContent />
+    </Suspense>
   )
 }
