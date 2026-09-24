@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '@/lib/CartContext'
 import { useAuth } from '@/lib/AuthContext'
+import { ShoppingCart } from 'lucide-react'
 
 export default function Header() {
   const { cartCount } = useCart()
@@ -39,16 +40,16 @@ export default function Header() {
             )}
 
             <Link
-              href="/cart"
-              className="relative bg-[#E27A12] text-white px-4 py-2 rounded-full font-medium hover:bg-[#c96a0f] transition"
-            >
-              Cart
-              {cartCount > 0 && (
-                <span className="ml-1 bg-white text-[#221610] text-xs rounded-full px-2 py-0.5">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
+        href="/cart"
+         className="relative bg-[#E27A12] text-white p-2.5 rounded-full hover:bg-[#c96a0f] transition"
+          >
+  <ShoppingCart size={20} />
+  {cartCount > 0 && (
+    <span className="absolute -top-1 -right-1 bg-white text-[#221610] text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+      {cartCount}
+    </span>
+  )}
+</Link>
           </div>
         </div>
 
