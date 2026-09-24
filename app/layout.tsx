@@ -5,6 +5,7 @@ import { CartProvider } from "@/lib/CartContext";
 import { AuthProvider } from "@/lib/AuthContext";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
+import TrustBadges from "@/app/components/TrustBadges";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,12 +30,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <AuthProvider>
-          <CartProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </CartProvider>
-        </AuthProvider>
+  <CartProvider>
+    <Header />
+    <TrustBadges />
+    <main className="flex-1">{children}</main>
+    <Footer />
+  </CartProvider>
+</AuthProvider>
       </body>
     </html>
   );
