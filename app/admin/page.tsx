@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-type Category = { id: string; name: string }
+type Category = { id: string; name: string; parent_id: string | null }
 type Product = {
   id: string
   name: string
@@ -164,18 +164,27 @@ export default function AdminPage() {
           className="w-full border rounded px-3 py-2"
         />
         <select
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2"
-        >
-          <option value="">Select category</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
+  value={categoryId}
+  onChange={(e) => setCategoryId(e.target.value)}
+  required
+  className="w-full border rounded px-3 py-2"
+>
+  <option value="">Select category</option>
+  {categories
+    .filter((cat: any) => !cat.parent_id)
+    .map((cat: any) => (
+      <optgroup key={cat.id} label={cat.name}>
+        <option value={cat.id}>{cat.name} (general)</option>
+        {categories
+          .filter((sub: any) => sub.parent_id === cat.id)
+          .map((sub: any) => (
+            <option key={sub.id} value={sub.id}>
+              {'  '}↳ {sub.name}
             </option>
           ))}
-        </select>
+      </optgroup>
+    ))}
+</select>
         <input
           placeholder="Brand"
           value={brand}
