@@ -110,12 +110,11 @@ export default function AdminOrdersPage() {
 
               <div className="space-y-3 mt-3 border-t pt-3">
                 {order.order_items?.map((item) => (
-  <div key={item.id} className="flex justify-between text-sm text-gray-700">
-    <span>
-      {item.product_name} × {item.quantity}
-    </span>
-    <span>₦{Number(item.price * item.quantity).toLocaleString()}</span>
-  </div>
+                  <div key={item.id} className="flex flex-col gap-1">
+                    <div className="flex justify-between text-sm">
+                      <span>{item.product_name} × {item.quantity}</span>
+                      <span>₦{Number(item.price * item.quantity).toLocaleString()}</span>
+                    </div>
                     <div className="flex gap-2">
                       <input
                         placeholder="Paste license key here"
