@@ -1,68 +1,162 @@
+"use client"
+
+import { useEffect, useState } from 'react'
+import { useAuth } from '@/lib/AuthContext'
 import { supabase } from '@/lib/supabase'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string }>
-}) {
-  const { category } = await searchParams
+type Category = { id: string; name: string }
+type Product = {
+  id: string
+  name: string
+  description: string
+  base_price: number
+  category_id: string
+  brand: string
+  image_url: string
+}
 
-  const { data: categories } = await supabase.from('categories').select('*')
+export default function AdminPage() {
+  const { user, isAdmin, loading } = useAuth()
+  const router = useRouter()
 
-  let query = supabase.from('products').select('*')
-  if (category) {
-    const cat = categories?.find((c) => c.slug === category)
-    if (cat) query = query.eq('category_id', cat.id)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [basePrice, setBasePrice] = useState('')
+  const [categoryId, setCategoryId] = useState('')
+  const [brand, setBrand] = useState('')
+  const [imageUrl, setImageUrl] = useState('')
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    if (!loading && (!user || !isAdmin)) {
+      router.push('/')
+    }
+  }, [user, isAdmin, loading, router])
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  async function loadData() {
+    const { data: cats } = await supabase.from('categories').select('*')
+    setCategories(cats ?? [])
+    const { data: prods } = await supabase.from('products').select('*').order('created_at', { ascending: false })
+    setProducts(prods ?? [])
   }
 
-  const { data: products, error } = await query
+  async function handleAddProduct(e: React.FormEvent) {
+    e.preventDefault()
+    setMessage('')
 
-  if (error) {
-    return <div className="p-6 text-red-600">Error loading products: {error.message}</div>
+    const { error } = await supabase.from('products').insert({
+      name,
+      description,
+      base_price: Number(basePrice),
+      category_id: categoryId,
+      brand,
+      image_url: imageUrl,
+    })
+
+    if (error) {
+      setMessage('Error: ' + error.message)
+    } else {
+      setMessage('Product added!')
+      setName('')
+      setDescription('')
+      setBasePrice('')
+      setBrand('')
+      setImageUrl('')
+      loadData()
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('Delete this product?')) return
+    await supabase.from('products').delete().eq('id', id)
+    loadData()
+  }
+
+  if (loading || !user || !isAdmin) {
+    return <div className="p-6">Checking access...</div>
   }
 
   return (
-    <div className="p-6 bg-[#FFFDFB] min-h-full">
-      <div className="flex gap-3 mb-6 flex-wrap">
-        <Link
-          href="/"
-          className={`px-4 py-2 rounded-full border transition ${
-            !category
-              ? 'bg-[#221610] text-white border-[#221610]'
-              : 'border-gray-300 text-gray-700 hover:border-[#E27A12] hover:text-[#E27A12]'
-          }`}
-        >
-          All
-        </Link>
-        {categories?.map((cat) => (
-          <Link
-            key={cat.id}
-            href={`/?category=${cat.slug}`}
-            className={`px-4 py-2 rounded-full border transition ${
-              category === cat.slug
-                ? 'bg-[#221610] text-white border-[#221610]'
-                : 'border-gray-300 text-gray-700 hover:border-[#E27A12] hover:text-[#E27A12]'
-            }`}
-          >
-            {cat.name}
-          </Link>
-        ))}
-      </div>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-xl font-bold mb-6">Admin — Manage Products</h1>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {products?.map((product) => (
-          <Link key={product.id} href={`/products/${product.id}`}>
-            <div className="border border-gray-200 rounded-lg p-4 hover:shadow-lg hover:border-[#E27A12] transition">
-              <img
-                src={product.image_url}
-                alt={product.name}
-                className="w-full h-40 object-cover rounded"
-              />
-              <h2 className="font-semibold mt-2 text-[#221610]">{product.name}</h2>
-              <p className="text-[#E27A12] font-medium">₦{Number(product.base_price).toLocaleString()}</p>
+      <form onSubmit={handleAddProduct} className="space-y-3 border p-4 rounded-lg mb-8">
+        <h2 className="font-semibold">Add New Product</h2>
+        <input
+          placeholder="Product name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          className="w-full border rounded px-3 py-2"
+        />
+        <textarea
+          placeholder="Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full border rounded px-3 py-2"
+        />
+        <input
+          type="number"
+          placeholder="Price (₦)"
+          value={basePrice}
+          onChange={(e) => setBasePrice(e.target.value)}
+          required
+          className="w-full border rounded px-3 py-2"
+        />
+        <select
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          required
+          className="w-full border rounded px-3 py-2"
+        >
+          <option value="">Select category</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+        <input
+          placeholder="Brand"
+          value={brand}
+          onChange={(e) => setBrand(e.target.value)}
+          className="w-full border rounded px-3 py-2"
+        />
+        <input
+          placeholder="Image URL"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          className="w-full border rounded px-3 py-2"
+        />
+        <button type="submit" className="bg-[#E27A12] text-white px-4 py-2 rounded-lg hover:bg-[#c96a0f] transition">
+          Add Product
+        </button>
+        {message && <p className="text-sm">{message}</p>}
+      </form>
+
+      <h2 className="font-semibold mb-3">Existing Products</h2>
+      <div className="space-y-2">
+        {products.map((p) => (
+          <div key={p.id} className="flex justify-between items-center border p-3 rounded">
+            <div>
+              <p className="font-medium">{p.name}</p>
+              <p className="text-sm text-gray-600">₦{Number(p.base_price).toLocaleString()}</p>
             </div>
-          </Link>
+            <button
+              onClick={() => handleDelete(p.id)}
+              className="text-red-600 text-sm"
+            >
+              Delete
+            </button>
+          </div>
         ))}
       </div>
     </div>
