@@ -36,24 +36,17 @@ export default function CartPage() {
               <div className="flex items-center gap-2 mt-2">
                 <button
                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                  className="border px-2 rounded"
+                  className="border border-gray-300 px-2 rounded hover:border-[#E27A12] hover:text-[#E27A12] transition"
                 >
                   −
                 </button>
                 <span>{item.quantity}</span>
                 <button
-                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                 className="border border-gray-300 px-2 rounded hover:border-[#E27A12] hover:text-[#E27A12] transition"
->
-            −
+                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  className="border border-gray-300 px-2 rounded hover:border-[#E27A12] hover:text-[#E27A12] transition"
+                >
+                  +
                 </button>
-<span>{item.quantity}</span>
-<button
-  onClick={() => updateQuantity(item.id, item.quantity + 1)}
-  className="border border-gray-300 px-2 rounded hover:border-[#E27A12] hover:text-[#E27A12] transition"
->
-  +
-</button>
                 <button
                   onClick={() => removeFromCart(item.id)}
                   className="text-red-600 text-sm ml-4"
@@ -74,14 +67,12 @@ export default function CartPage() {
         <span>₦{cartTotal.toLocaleString()}</span>
       </div>
 
-      <button className="mt-6 w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition">
-       <Link
-       href="/checkout"
-       className="mt-6 block text-center w-full bg-[#E27A12] text-white py-3 rounded-lg hover:bg-[#c96a0f] transition font-medium"
-        >
+      <Link
+        href="/checkout"
+        className="mt-6 block text-center w-full bg-[#E27A12] text-white py-3 rounded-lg hover:bg-[#c96a0f] transition font-medium"
+      >
         Proceed to Checkout
       </Link>
-      </button>
     </div>
   )
 }
