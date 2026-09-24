@@ -2,6 +2,8 @@ import { supabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import AddToCartButton from '@/app/components/AddToCartButton'
+import RecentlyViewedTracker from '@/app/components/RecentlyViewedTracker'
+import RecentlyViewed from '@/app/components/RecentlyViewed'
 
 export default async function ProductPage({
   params,
@@ -20,8 +22,17 @@ export default async function ProductPage({
     notFound()
   }
 
+  const { data: relatedProducts } = await supabase
+    .from('products')
+    .select('*')
+    .eq('category_id', product.category_id)
+    .neq('id', product.id)
+    .limit(4)
+
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <RecentlyViewedTracker productId={product.id} />
+
       <Link
         href="/"
         className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-[#E27A12] transition mb-4"
@@ -51,6 +62,31 @@ export default async function ProductPage({
           />
         </div>
       </div>
+
+      {relatedProducts && relatedProducts.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-lg font-bold mb-4 text-[#221610]">Related Products</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {relatedProducts.map((p) => (
+              <Link key={p.id} href={`/products/${p.id}`}>
+                <div className="border border-gray-200 rounded-lg p-4 hover:shadow-lg hover:border-[#E27A12] transition">
+                  <img
+                    src={p.image_url}
+                    alt={p.name}
+                    className="w-full h-32 object-cover rounded"
+                  />
+                  <h3 className="font-medium mt-2 text-sm text-[#221610]">{p.name}</h3>
+                  <p className="text-[#E27A12] text-sm font-medium">
+                    ₦{Number(p.base_price).toLocaleString()}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <RecentlyViewed excludeId={product.id} />
     </div>
   )
 }
