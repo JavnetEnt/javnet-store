@@ -57,15 +57,43 @@ export async function GET(req: NextRequest) {
   }
 
   // Insert order items
-  const orderItems = metadata.items.map((item: any) => ({
+// Fetch each product's category to determine if it's software
+const productIds = metadata.items.map((item: any) => item.product_id)
+const { data: productsData } = await supabaseAdmin
+  .from('products')
+  .select('id, category_id')
+  .in('id', productIds)
+
+const { data: categoriesData } = await supabaseAdmin
+  .from('categories')
+  .select('id, parent_id, slug')
+
+function isSoftwareCategory(categoryId: string): boolean {
+  const cat = categoriesData?.find((c) => c.id === categoryId)
+  if (!cat) return false
+  if (cat.slug === 'software') return true
+  if (cat.parent_id) {
+    const parent = categoriesData?.find((c) => c.id === cat.parent_id)
+    return parent?.slug === 'software'
+  }
+  return false
+}
+
+const orderItems = metadata.items.map((item: any) => {
+  const product = productsData?.find((p) => p.id === item.product_id)
+  const isSoftware = product ? isSoftwareCategory(product.category_id) : false
+
+  return {
     order_id: order.id,
     product_id: item.product_id,
     product_name: item.name,
     quantity: item.quantity,
     price: item.price,
-  }))
+    is_software: isSoftware,
+  }
+})
 
-  await supabaseAdmin.from('order_items').insert(orderItems)
+await supabaseAdmin.from('order_items').insert(orderItems)
 
   // Decrement stock for each product
   for (const item of metadata.items) {

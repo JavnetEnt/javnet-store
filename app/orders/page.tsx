@@ -11,6 +11,9 @@ type OrderItem = {
   product_name: string
   quantity: number
   price: number
+  license_key: string | null
+  is_software: boolean
+  delivered: boolean
 }
 
 type Order = {
@@ -92,13 +95,29 @@ export default function OrdersPage() {
                 </span>
               </div>
 
-              <div className="space-y-1 mb-3">
+              <div className="space-y-2 mb-3">
                 {order.order_items?.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm text-gray-700">
-                    <span>
-                      {item.product_name} × {item.quantity}
-                    </span>
-                    <span>₦{Number(item.price * item.quantity).toLocaleString()}</span>
+                  <div key={item.id} className="text-sm">
+                    <div className="flex justify-between text-gray-700">
+                      <span>
+                        {item.product_name} × {item.quantity}
+                      </span>
+                      <span>₦{Number(item.price * item.quantity).toLocaleString()}</span>
+                    </div>
+                    {item.is_software && item.license_key && (
+                      <p className="text-xs bg-gray-50 border rounded px-2 py-1 mt-1 font-mono text-gray-700">
+                        License key: {item.license_key}
+                      </p>
+                    )}
+                    {!item.is_software && (
+                      <p className="text-xs mt-1">
+                        {item.delivered ? (
+                          <span className="text-green-700">✓ Delivered</span>
+                        ) : (
+                          <span className="text-gray-500">Preparing for delivery</span>
+                        )}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>

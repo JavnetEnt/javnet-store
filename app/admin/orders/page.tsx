@@ -12,6 +12,8 @@ type OrderItem = {
   quantity: number
   price: number
   license_key: string | null
+  is_software: boolean
+  delivered: boolean
 }
 
 type Order = {
@@ -70,6 +72,14 @@ export default function AdminOrdersPage() {
     loadOrders()
   }
 
+  async function markDelivered(itemId: string) {
+    await supabase
+      .from('order_items')
+      .update({ delivered: true })
+      .eq('id', itemId)
+    loadOrders()
+  }
+
   if (loading || !user || !isAdmin) {
     return <div className="p-6">Checking access...</div>
   }
@@ -92,7 +102,9 @@ export default function AdminOrdersPage() {
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <p className="font-medium">{order.customer_name}</p>
-                  <p className="text-sm text-gray-500">{order.customer_email} · {order.customer_phone}</p>
+                  <p className="text-sm text-gray-500">
+                    ✉ {order.customer_email} · ☎ {order.customer_phone}
+                  </p>
                   <p className="text-xs text-gray-400 mt-1">
                     {new Date(order.created_at).toLocaleString('en-NG')}
                   </p>
@@ -112,31 +124,59 @@ export default function AdminOrdersPage() {
                 {order.order_items?.map((item) => (
                   <div key={item.id} className="flex flex-col gap-1">
                     <div className="flex justify-between text-sm">
-                      <span>{item.product_name} × {item.quantity}</span>
+                      <span>
+                        {item.product_name} × {item.quantity}
+                        {item.is_software && (
+                          <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                            Software
+                          </span>
+                        )}
+                      </span>
                       <span>₦{Number(item.price * item.quantity).toLocaleString()}</span>
                     </div>
-                    <div className="flex gap-2">
-                      <input
-                        placeholder="Paste license key here"
-                        value={keyInputs[item.id] ?? ''}
-                        onChange={(e) =>
-                          setKeyInputs((prev) => ({ ...prev, [item.id]: e.target.value }))
-                        }
-                        className="flex-1 border rounded px-2 py-1 text-sm"
-                      />
-                      <button
-                        onClick={() => saveKey(item.id)}
-                        disabled={savingId === item.id}
-                        className="bg-[#221610] text-white px-3 py-1 rounded text-sm hover:bg-black transition disabled:opacity-50"
-                      >
-                        {savingId === item.id ? 'Saving...' : 'Save'}
-                      </button>
-                    </div>
+
+                    {item.is_software ? (
+                      <div className="flex gap-2">
+                        <input
+                          placeholder="Paste license key here"
+                          value={keyInputs[item.id] ?? ''}
+                          onChange={(e) =>
+                            setKeyInputs((prev) => ({ ...prev, [item.id]: e.target.value }))
+                          }
+                          className="flex-1 border rounded px-2 py-1 text-sm"
+                        />
+                        <button
+                          onClick={() => saveKey(item.id)}
+                          disabled={savingId === item.id}
+                          className="bg-[#221610] text-white px-3 py-1 rounded text-sm hover:bg-black transition disabled:opacity-50"
+                        >
+                          {savingId === item.id ? 'Saving...' : 'Save'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        {item.delivered ? (
+                          <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
+                            ✓ Delivered
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => markDelivered(item.id)}
+                            className="bg-[#E27A12] text-white px-3 py-1 rounded text-sm hover:bg-[#c96a0f] transition"
+                          >
+                            Mark as Delivered
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
 
               <p className="text-sm text-gray-500 mt-3 border-t pt-2">
+                Delivering to: {order.delivery_address}
+              </p>
+              <p className="text-sm text-gray-500">
                 Total: <span className="font-semibold text-[#221610]">₦{Number(order.total_amount).toLocaleString()}</span>
               </p>
             </div>
