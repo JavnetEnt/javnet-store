@@ -6,6 +6,9 @@ import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -21,7 +24,7 @@ export default function LoginPage() {
     setLoading(true)
 
     if (isSignUp) {
-      const { error } = await signUp(email, password)
+      const { error } = await signUp(email, password, firstName, lastName, phone)
       setLoading(false)
 
       if (error) {
@@ -69,6 +72,35 @@ export default function LoginPage() {
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {isSignUp && (
+          <>
+            <div className="flex gap-3">
+              <input
+                placeholder="First name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                className="w-full border rounded-lg px-3 py-2"
+              />
+              <input
+                placeholder="Last name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+            <input
+              type="tel"
+              placeholder="Phone number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              className="w-full border rounded-lg px-3 py-2"
+            />
+          </>
+        )}
+
         <input
           type="email"
           placeholder="Email"
