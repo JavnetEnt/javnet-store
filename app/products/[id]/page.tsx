@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import AddToCartButton from '@/app/components/AddToCartButton'
 
 export default async function ProductPage({
@@ -21,6 +22,13 @@ export default async function ProductPage({
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-[#E27A12] transition mb-4"
+      >
+        ← Back to shop
+      </Link>
+
       <div className="grid md:grid-cols-2 gap-8">
         <img
           src={product.image_url}
@@ -31,7 +39,7 @@ export default async function ProductPage({
           <h1 className="text-2xl font-bold">{product.name}</h1>
           <p className="text-gray-500 mt-1">{product.brand}</p>
           <p className="text-2xl font-semibold mt-4 text-[#E27A12]">
-          ₦{Number(product.base_price).toLocaleString()}
+            ₦{Number(product.base_price).toLocaleString()}
           </p>
           <p className="text-gray-700 mt-4">{product.description}</p>
 
