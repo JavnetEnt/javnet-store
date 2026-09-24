@@ -31,13 +31,16 @@ export default function Header() {
 
         <div className="flex items-center gap-4 text-sm">
           {user ? (
-            <>
-              <span className="hidden sm:inline text-gray-300">{user.email}</span>
-              <button onClick={() => signOut()} className="hover:text-[#E27A12] transition">
-                Sign Out
-              </button>
-            </>
-          ) : (
+  <>
+    <Link href="/orders" className="hover:text-[#E27A12] transition">
+      Orders
+    </Link>
+    <span className="hidden sm:inline text-gray-300">{user.email}</span>
+    <button onClick={() => signOut()} className="hover:text-[#E27A12] transition">
+      Sign Out
+    </button>
+  </>
+) : (
             <Link href="/login" className="hover:text-[#E27A12] transition">
               Sign In
             </Link>
