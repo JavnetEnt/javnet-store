@@ -104,11 +104,11 @@ export default function OrdersPage() {
                       </span>
                       <span>₦{Number(item.price * item.quantity).toLocaleString()}</span>
                     </div>
-                    {item.is_software && item.license_key && (
-                      <p className="text-xs bg-gray-50 border rounded px-2 py-1 mt-1 font-mono text-gray-700">
-                        License key: {item.license_key}
-                      </p>
-                    )}
+                    {item.is_software && (
+  <p className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded mt-1 inline-block">
+    Your license key will be sent to your email shortly
+  </p>
+)}
                     {!item.is_software && (
                       <p className="text-xs mt-1">
                         {item.delivered ? (
