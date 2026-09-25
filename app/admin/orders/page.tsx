@@ -8,14 +8,18 @@ import Link from 'next/link'
 
 const PAGE_SIZE = 10
 
+const STATUS_STEPS = ['pending', 'processing', 'shipped', 'delivered']
+
 type OrderItem = {
   id: string
   product_name: string
   quantity: number
   price: number
-  license_key: string | null
   is_software: boolean
   delivered: boolean
+  delivery_status: string
+  tracking_number: string | null
+  courier_name: string | null
 }
 
 type Order = {
@@ -36,6 +40,8 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+  const [trackingInputs, setTrackingInputs] = useState<Record<string, string>>({})
+  const [courierInputs, setCourierInputs] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) {
@@ -59,12 +65,36 @@ export default function AdminOrdersPage() {
 
     setOrders(data ?? [])
     setTotalCount(count ?? 0)
+
+    const tInit: Record<string, string> = {}
+    const cInit: Record<string, string> = {}
+    data?.forEach((order) => {
+      order.order_items.forEach((item: OrderItem) => {
+        tInit[item.id] = item.tracking_number ?? ''
+        cInit[item.id] = item.courier_name ?? ''
+      })
+    })
+    setTrackingInputs(tInit)
+    setCourierInputs(cInit)
   }
 
-  async function markDelivered(itemId: string) {
+  async function markSoftwareDelivered(itemId: string) {
+    await supabase.from('order_items').update({ delivered: true }).eq('id', itemId)
+    loadOrders()
+  }
+
+  async function updateDeliveryStatus(itemId: string, status: string) {
+    await supabase.from('order_items').update({ delivery_status: status }).eq('id', itemId)
+    loadOrders()
+  }
+
+  async function saveTracking(itemId: string) {
     await supabase
       .from('order_items')
-      .update({ delivered: true })
+      .update({
+        tracking_number: trackingInputs[itemId] || null,
+        courier_name: courierInputs[itemId] || null,
+      })
       .eq('id', itemId)
     loadOrders()
   }
@@ -102,7 +132,7 @@ export default function AdminOrdersPage() {
                     </p>
                   </div>
                   <span
-                    className={`	text-xs px-3 py-1 rounded-full font-medium ${
+                    className={`text-xs px-3 py-1 rounded-full font-medium ${
                       order.status === 'paid'
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-600'
@@ -112,9 +142,9 @@ export default function AdminOrdersPage() {
                   </span>
                 </div>
 
-                <div className="space-y-3 mt-3 border-t pt-3">
+                <div className="space-y-4 mt-3 border-t pt-3">
                   {order.order_items?.map((item) => (
-                    <div key={item.id} className="flex flex-col gap-1">
+                    <div key={item.id} className="flex flex-col gap-2">
                       <div className="flex justify-between text-sm">
                         <span>
                           {item.product_name} x {item.quantity}
@@ -127,27 +157,70 @@ export default function AdminOrdersPage() {
                         <span>NGN {Number(item.price * item.quantity).toLocaleString()}</span>
                       </div>
 
-                      <div>
-                        {item.delivered ? (
-                          <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
-                            {item.is_software ? 'License key sent' : 'Delivered'}
-                          </span>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            {item.is_software && (
+                      {item.is_software ? (
+                        <div>
+                          {item.delivered ? (
+                            <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
+                              License key sent
+                            </span>
+                          ) : (
+                            <div className="flex items-center gap-2">
                               <span className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
                                 Deliver license key via email
                               </span>
-                            )}
+                              <button
+                                onClick={() => markSoftwareDelivered(item.id)}
+                                className="bg-[#E27A12] text-white px-3 py-1 rounded text-sm hover:bg-[#c96a0f] transition"
+                              >
+                                Mark License Sent
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex gap-2 flex-wrap">
+                            {STATUS_STEPS.map((step) => (
+                              <button
+                                key={step}
+                                onClick={() => updateDeliveryStatus(item.id, step)}
+                                className={`text-xs px-3 py-1 rounded-full border capitalize transition ${
+                                  item.delivery_status === step
+                                    ? 'bg-[#221610] text-white border-[#221610]'
+                                    : 'border-gray-300 text-gray-600 hover:border-[#E27A12] hover:text-[#E27A12]'
+                                }`}
+                              >
+                                {step}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="flex gap-2">
+                            <input
+                              placeholder="Courier name (optional)"
+                              value={courierInputs[item.id] ?? ''}
+                              onChange={(e) =>
+                                setCourierInputs((prev) => ({ ...prev, [item.id]: e.target.value }))
+                              }
+                              className="flex-1 border rounded px-2 py-1 text-sm"
+                            />
+                            <input
+                              placeholder="Tracking number (optional)"
+                              value={trackingInputs[item.id] ?? ''}
+                              onChange={(e) =>
+                                setTrackingInputs((prev) => ({ ...prev, [item.id]: e.target.value }))
+                              }
+                              className="flex-1 border rounded px-2 py-1 text-sm"
+                            />
                             <button
-                              onClick={() => markDelivered(item.id)}
-                              className="bg-[#E27A12] text-white px-3 py-1 rounded text-sm hover:bg-[#c96a0f] transition"
+                              onClick={() => saveTracking(item.id)}
+                              className="bg-[#221610] text-white px-3 py-1 rounded text-sm hover:bg-black transition"
                             >
-                              {item.is_software ? 'Mark License Sent' : 'Mark as Delivered'}
+                              Save
                             </button>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -171,11 +244,9 @@ export default function AdminOrdersPage() {
               >
                 Prev
               </button>
-
               <span className="text-sm text-gray-600">
                 Page {page} of {totalPages}
               </span>
-
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}

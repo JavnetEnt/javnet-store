@@ -6,14 +6,18 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+const STATUS_STEPS = ['pending', 'processing', 'shipped', 'delivered']
+
 type OrderItem = {
   id: string
   product_name: string
   quantity: number
   price: number
-  license_key: string | null
   is_software: boolean
   delivered: boolean
+  delivery_status: string
+  tracking_number: string | null
+  courier_name: string | null
 }
 
 type Order = {
@@ -95,39 +99,61 @@ export default function OrdersPage() {
                 </span>
               </div>
 
-              <div className="space-y-2 mb-3">
-                {order.order_items?.map((item) => (
-                  <div key={item.id} className="text-sm">
-                    <div className="flex justify-between text-gray-700">
-                      <span>
-                        {item.product_name} x {item.quantity}
-                      </span>
-                      <span>NGN {Number(item.price * item.quantity).toLocaleString()}</span>
+              <div className="space-y-3 mb-3">
+                {order.order_items?.map((item) => {
+                  const currentStepIndex = STATUS_STEPS.indexOf(item.delivery_status || 'pending')
+                  return (
+                    <div key={item.id} className="text-sm border-t pt-2">
+                      <div className="flex justify-between text-gray-700">
+                        <span>
+                          {item.product_name} x {item.quantity}
+                        </span>
+                        <span>NGN {Number(item.price * item.quantity).toLocaleString()}</span>
+                      </div>
+
+                      {item.is_software ? (
+                        <p className="text-xs mt-1">
+                          {item.delivered ? (
+                            <span className="bg-green-50 text-green-700 px-2 py-1 rounded inline-block">
+                              License key sent to your email
+                            </span>
+                          ) : (
+                            <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded inline-block">
+                              Your license key will be sent to your email shortly
+                            </span>
+                          )}
+                        </p>
+                      ) : (
+                        <div className="mt-2">
+                          <div className="flex gap-1">
+                            {STATUS_STEPS.map((step, i) => (
+                              <div key={step} className="flex-1">
+                                <div
+                                  className={`h-1.5 rounded-full ${
+                                    i <= currentStepIndex ? 'bg-[#E27A12]' : 'bg-gray-200'
+                                  }`}
+                                />
+                                <p
+                                  className={`text-[10px] mt-1 capitalize ${
+                                    i <= currentStepIndex ? 'text-[#221610] font-medium' : 'text-gray-400'
+                                  }`}
+                                >
+                                  {step}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                          {(item.courier_name || item.tracking_number) && (
+                            <p className="text-xs text-gray-500 mt-2">
+                              {item.courier_name && <>Courier: {item.courier_name} </>}
+                              {item.tracking_number && <>· Tracking #: {item.tracking_number}</>}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    {item.is_software && (
-                      <p className="text-xs mt-1">
-                        {item.delivered ? (
-                          <span className="bg-green-50 text-green-700 px-2 py-1 rounded inline-block">
-                            Sent: License key sent to your email
-                          </span>
-                        ) : (
-                          <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded inline-block">
-                            Your license key will be sent to your email shortly
-                          </span>
-                        )}
-                      </p>
-                    )}
-                    {!item.is_software && (
-                      <p className="text-xs mt-1">
-                        {item.delivered ? (
-                          <span className="text-green-700">Delivered</span>
-                        ) : (
-                          <span className="text-gray-500">Pending</span>
-                        )}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
 
               <div className="flex justify-between items-center border-t pt-3">
