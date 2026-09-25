@@ -42,7 +42,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="font-semibold text-base text-[#221610] mb-2">8. Contact Us</h2>
-          <p>For questions about these terms, please reach us via the contact details on our <a href="https://javnet.com.ng/contact" className="text-[#E27A12] hover:underline">main website</a>.</p>
+          <p>For questions about these terms, please reach us via the contact details on our <a href="https://javnet.com.ng" className="text-[#E27A12] hover:underline">main website</a>.</p>
         </section>
       </div>
     </div>

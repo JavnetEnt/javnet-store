@@ -43,8 +43,8 @@ export default function Footer() {
         <div>
           <h3 className="text-xs font-semibold tracking-wider text-gray-500 mb-3">COMPANY</h3>
           <ul className="space-y-2 text-sm">
-            <li><a href="https://javnet.com.ng/about" className="hover:text-[#E27A12]">About</a></li>
-            <li><a href="https://javnet.com.ng/contact" className="hover:text-[#E27A12]">Contact</a></li>
+            <li><a href="https://javnet.com.ng" className="hover:text-[#E27A12]">About</a></li>
+            <li><a href="https://javnet.com.ng" className="hover:text-[#E27A12]">Contact</a></li>
             <li><a href="https://javnet.com.ng" className="hover:text-[#E27A12]">Main Site</a></li>
           </ul>
         </div>
