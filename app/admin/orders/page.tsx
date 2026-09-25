@@ -148,23 +148,10 @@ export default function AdminOrdersPage() {
                       </div>
 
                       {item.is_software ? (
-                        <div className="flex gap-2">
-                          <input
-                            placeholder="Paste license key here"
-                            value={keyInputs[item.id] ?? ''}
-                            onChange={(e) =>
-                              setKeyInputs((prev) => ({ ...prev, [item.id]: e.target.value }))
-                            }
-                            className="flex-1 border rounded px-2 py-1 text-sm"
-                          />
-                          <button
-                            onClick={() => saveKey(item.id)}
-                            disabled={savingId === item.id}
-                            className="bg-[#221610] text-white px-3 py-1 rounded text-sm hover:bg-black transition disabled:opacity-50"
-                          >
-                            {savingId === item.id ? 'Saving...' : 'Save'}
-                          </button>
-                        </div>
+  <span className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full inline-block">
+    Deliver license key via email
+  </span>
+) : (
                       ) : (
                         <div>
                           {item.delivered ? (
