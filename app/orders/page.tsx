@@ -85,7 +85,7 @@ export default function OrdersPage() {
                   </p>
                 </div>
                 <span
-                  className={`	ext-xs px-3 py-1 rounded-full font-medium ${
+                  className={`text-xs px-3 py-1 rounded-full font-medium ${
                     order.status === 'paid'
                       ? 'bg-green-100 text-green-700'
                       : 'bg-gray-100 text-gray-600'
