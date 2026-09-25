@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/AuthContext'
@@ -85,7 +85,7 @@ export default function OrdersPage() {
                   </p>
                 </div>
                 <span
-                  className={`text-xs px-3 py-1 rounded-full font-medium ${
+                  className={`	ext-xs px-3 py-1 rounded-full font-medium ${
                     order.status === 'paid'
                       ? 'bg-green-100 text-green-700'
                       : 'bg-gray-100 text-gray-600'
@@ -100,21 +100,29 @@ export default function OrdersPage() {
                   <div key={item.id} className="text-sm">
                     <div className="flex justify-between text-gray-700">
                       <span>
-                        {item.product_name} × {item.quantity}
+                        {item.product_name} x {item.quantity}
                       </span>
-                      <span>₦{Number(item.price * item.quantity).toLocaleString()}</span>
+                      <span>NGN {Number(item.price * item.quantity).toLocaleString()}</span>
                     </div>
                     {item.is_software && (
-  <p className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded mt-1 inline-block">
-    Your license key will be sent to your email shortly
-  </p>
-)}
+                      <p className="text-xs mt-1">
+                        {item.delivered ? (
+                          <span className="bg-green-50 text-green-700 px-2 py-1 rounded inline-block">
+                            Sent: License key sent to your email
+                          </span>
+                        ) : (
+                          <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded inline-block">
+                            Your license key will be sent to your email shortly
+                          </span>
+                        )}
+                      </p>
+                    )}
                     {!item.is_software && (
                       <p className="text-xs mt-1">
                         {item.delivered ? (
-                          <span className="text-green-700">✓ Delivered</span>
+                          <span className="text-green-700">Delivered</span>
                         ) : (
-                          <span className="text-gray-500">Preparing for delivery</span>
+                          <span className="text-gray-500">Pending</span>
                         )}
                       </p>
                     )}
@@ -127,7 +135,7 @@ export default function OrdersPage() {
                   Delivering to: {order.delivery_address}
                 </p>
                 <p className="font-semibold">
-                  ₦{Number(order.total_amount).toLocaleString()}
+                  NGN {Number(order.total_amount).toLocaleString()}
                 </p>
               </div>
             </div>

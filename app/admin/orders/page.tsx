@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/AuthContext'
@@ -34,8 +34,6 @@ export default function AdminOrdersPage() {
   const { user, isAdmin, loading } = useAuth()
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
-  const [keyInputs, setKeyInputs] = useState<Record<string, string>>({})
-  const [savingId, setSavingId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
 
@@ -61,24 +59,6 @@ export default function AdminOrdersPage() {
 
     setOrders(data ?? [])
     setTotalCount(count ?? 0)
-
-    const initial: Record<string, string> = {}
-    data?.forEach((order) => {
-      order.order_items.forEach((item: OrderItem) => {
-        initial[item.id] = item.license_key ?? ''
-      })
-    })
-    setKeyInputs(initial)
-  }
-
-  async function saveKey(itemId: string) {
-    setSavingId(itemId)
-    await supabase
-      .from('order_items')
-      .update({ license_key: keyInputs[itemId] })
-      .eq('id', itemId)
-    setSavingId(null)
-    loadOrders()
   }
 
   async function markDelivered(itemId: string) {
@@ -100,7 +80,7 @@ export default function AdminOrdersPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold">Orders</h1>
         <Link href="/admin" className="text-sm text-[#E27A12] hover:underline">
-          ← Manage Products
+          Back to Manage Products
         </Link>
       </div>
 
@@ -115,14 +95,14 @@ export default function AdminOrdersPage() {
                   <div>
                     <p className="font-medium">{order.customer_name}</p>
                     <p className="text-sm text-gray-500">
-                      ✉ {order.customer_email} · ☎ {order.customer_phone}
+                      {order.customer_email} - {order.customer_phone}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       {new Date(order.created_at).toLocaleString('en-NG')}
                     </p>
                   </div>
                   <span
-                    className={`text-xs px-3 py-1 rounded-full font-medium ${
+                    className={`	ext-xs px-3 py-1 rounded-full font-medium ${
                       order.status === 'paid'
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-600'
@@ -137,37 +117,37 @@ export default function AdminOrdersPage() {
                     <div key={item.id} className="flex flex-col gap-1">
                       <div className="flex justify-between text-sm">
                         <span>
-                          {item.product_name} × {item.quantity}
+                          {item.product_name} x {item.quantity}
                           {item.is_software && (
                             <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
                               Software
                             </span>
                           )}
                         </span>
-                        <span>₦{Number(item.price * item.quantity).toLocaleString()}</span>
+                        <span>NGN {Number(item.price * item.quantity).toLocaleString()}</span>
                       </div>
 
-                      {item.is_software ? (
-  <span className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full inline-block">
-    Deliver license key via email
-  </span>
-
-                      ) : (
-                        <div>
-                          {item.delivered ? (
-                            <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
-                              ✓ Delivered
-                            </span>
-                          ) : (
+                      <div>
+                        {item.delivered ? (
+                          <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
+                            {item.is_software ? 'License key sent' : 'Delivered'}
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            {item.is_software && (
+                              <span className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+                                Deliver license key via email
+                              </span>
+                            )}
                             <button
                               onClick={() => markDelivered(item.id)}
                               className="bg-[#E27A12] text-white px-3 py-1 rounded text-sm hover:bg-[#c96a0f] transition"
                             >
-                              Mark as Delivered
+                              {item.is_software ? 'Mark License Sent' : 'Mark as Delivered'}
                             </button>
-                          )}
-                        </div>
-                      )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -176,7 +156,7 @@ export default function AdminOrdersPage() {
                   Delivering to: {order.delivery_address}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Total: <span className="font-semibold text-[#221610]">₦{Number(order.total_amount).toLocaleString()}</span>
+                  Total: <span className="font-semibold text-[#221610]">NGN {Number(order.total_amount).toLocaleString()}</span>
                 </p>
               </div>
             ))}
@@ -189,7 +169,7 @@ export default function AdminOrdersPage() {
                 disabled={page === 1}
                 className="px-3 py-2 rounded border text-sm hover:border-[#E27A12] hover:text-[#E27A12] disabled:opacity-40 disabled:pointer-events-none"
               >
-                ← Prev
+                Prev
               </button>
 
               <span className="text-sm text-gray-600">
@@ -201,7 +181,7 @@ export default function AdminOrdersPage() {
                 disabled={page === totalPages}
                 className="px-3 py-2 rounded border text-sm hover:border-[#E27A12] hover:text-[#E27A12] disabled:opacity-40 disabled:pointer-events-none"
               >
-                Next →
+                Next
               </button>
             </div>
           )}
