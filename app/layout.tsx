@@ -6,6 +6,7 @@ import { AuthProvider } from "@/lib/AuthContext";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import TrustBadges from "@/app/components/TrustBadges";
+import Toast from "@/app/components/Toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,12 +30,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AuthProvider>
+     <AuthProvider>
   <CartProvider>
     <Header />
     <TrustBadges />
     <main className="flex-1">{children}</main>
     <Footer />
+    <Toast />
   </CartProvider>
 </AuthProvider>
       </body>
