@@ -151,7 +151,7 @@ export default function AdminOrdersPage() {
   <span className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full inline-block">
     Deliver license key via email
   </span>
-) : (
+
                       ) : (
                         <div>
                           {item.delivered ? (
