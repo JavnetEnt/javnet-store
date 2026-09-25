@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/AuthContext'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false)
@@ -119,16 +120,22 @@ export default function LoginPage() {
           className="w-full border rounded-lg px-3 py-2"
         />
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+       {error && <p className="text-red-600 text-sm">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-[#E27A12] text-white py-2 rounded-lg hover:bg-[#c96a0f] transition disabled:opacity-50 font-medium"
-        >
-          {loading ? 'Please wait...' : isSignUp ? 'Sign Up' : 'Sign In'}
-        </button>
-      </form>
+<button
+  type="submit"
+  disabled={loading}
+  className="w-full bg-[#E27A12] text-white py-2 rounded-lg hover:bg-[#c96a0f] transition disabled:opacity-50 font-medium"
+>
+  {loading ? 'Please wait...' : isSignUp ? 'Sign Up' : 'Sign In'}
+</button>
+
+{!isSignUp && (
+  <Link href="/forgot-password" className="text-sm text-[#E27A12] hover:underline block text-center">
+    Forgot password?
+  </Link>
+)}
+</form>
 
       <button
         onClick={() => setIsSignUp(!isSignUp)}
