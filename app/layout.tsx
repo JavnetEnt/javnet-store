@@ -19,9 +19,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Javnet Marketplace",
-  description: "Software, PCs and PC gadgets by Javnet Technologies",
-};
+  metadataBase: new URL('https://marketplace.javnet.com.ng'),
+  title: {
+    default: 'Javnet Marketplace | Software, PCs and PC Gadgets in Nigeria',
+    template: '%s | Javnet Marketplace',
+  },
+  description:
+    'Buy genuine software licenses (antivirus, Windows, Office, design software), laptops, desktops and PC gadgets in Nigeria. Secure Paystack payments and fast delivery.',
+  openGraph: {
+    type: 'website',
+    siteName: 'Javnet Marketplace',
+    locale: 'en_NG',
+    images: ['/logo.png'],
+  },
+  twitter: { card: 'summary_large_image' },
+}
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

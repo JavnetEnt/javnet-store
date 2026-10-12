@@ -1,8 +1,43 @@
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
 const PAGE_SIZE = 12
 
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; page?: string; q?: string }>
+}): Promise<Metadata> {
+  const { category, page, q } = await searchParams
+
+  if (q?.trim()) {
+    return { title: `Search: ${q.trim()}`, robots: { index: false, follow: true } }
+  }
+
+  const params = new URLSearchParams()
+  if (category) params.set('category', category)
+  if (Number(page) > 1) params.set('page', String(Number(page)))
+  const qs = params.toString()
+  const canonical = qs ? `/?${qs}` : '/'
+
+  if (category) {
+    const { data } = await supabase
+      .from('categories')
+      .select('name')
+      .eq('slug', category)
+      .maybeSingle()
+    if (data) {
+      return {
+        title: `${data.name} for Sale in Nigeria`,
+        description: `Shop ${data.name} at Javnet Marketplace. Genuine products, secure payment and fast delivery in Nigeria.`,
+        alternates: { canonical },
+      }
+    }
+  }
+
+  return { alternates: { canonical } }
+}
 export default async function Home({
   searchParams,
 }: {

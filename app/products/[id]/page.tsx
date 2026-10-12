@@ -1,9 +1,48 @@
+import type { Metadata } from 'next'
 import { supabase } from '@/lib/supabase'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import AddToCartButton from '@/app/components/AddToCartButton'
 import RecentlyViewedTracker from '@/app/components/RecentlyViewedTracker'
 import RecentlyViewed from '@/app/components/RecentlyViewed'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const { data: product } = await supabase
+    .from('products')
+    .select('name, description, image_url')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!product) {
+    return { title: 'Product not found', robots: { index: false } }
+  }
+
+  const summary = (product.description ?? '')
+    .split('\n')
+    .map((line: string) => line.trim())
+    .filter(Boolean)
+    .slice(0, 3)
+    .join('. ')
+  const description = (summary || `Buy ${product.name} at Javnet Marketplace.`).slice(0, 155)
+  const title = `${product.name} - Price in Nigeria`
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/products/${id}` },
+    openGraph: {
+      title,
+      description,
+      url: `/products/${id}`,
+      images: product.image_url ? [{ url: product.image_url }] : undefined,
+    },
+  }
+}
 
 export default async function ProductPage({
   params,
@@ -29,8 +68,33 @@ export default async function ProductPage({
     .neq('id', product.id)
     .limit(4)
 
+    const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: product.name,
+  image: product.image_url,
+  description: product.description?.replace(/\n/g, '. '),
+  brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
+  offers: {
+    '@type': 'Offer',
+    url: `https://marketplace.javnet.com.ng/products/${product.id}`,
+    priceCurrency: 'NGN',
+    price: Number(product.base_price),
+    availability:
+      (product.stock_count ?? 0) > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+  },
+}
+
   return (
     <div className="max-w-4xl mx-auto p-6">
+      <script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{
+    __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
+  }}
+/>
       <RecentlyViewedTracker productId={product.id} />
 
       <Link
