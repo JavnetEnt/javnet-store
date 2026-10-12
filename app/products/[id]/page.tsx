@@ -71,6 +71,7 @@ export default async function ProductPage({
             image_url={product.image_url}
             stock={product.stock_count ?? 0}
             hasOptions={product.has_license_options ?? false}
+prices={product.license_prices ?? null}
           />
         </div>
       </div>

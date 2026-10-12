@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   const ids = Array.from(new Set(items.map((i: any) => i.product_id)))
   const { data: products } = await supabaseAdmin
     .from('products')
-    .select('id, name, base_price, stock_count, has_license_options')
+    .select('id, name, base_price, stock_count, has_license_options, license_prices')
     .in('id', ids as string[])
 
   const requested: Record<string, number> = {}
@@ -40,10 +40,18 @@ export async function POST(req: NextRequest) {
     let unitPrice = Number(p.base_price)
     let devices: number | null = null
     let years: number | null = null
+
     if (p.has_license_options) {
-      devices = Math.min(10, Math.max(1, Math.floor(Number(item.devices) || 1)))
-      years = Math.min(10, Math.max(1, Math.floor(Number(item.years) || 1)))
-      unitPrice = unitPrice * devices * years
+      devices = Math.min(25, Math.max(1, Math.floor(Number(item.devices) || 1)))
+      years = Math.min(5, Math.max(1, Math.floor(Number(item.years) || 1)))
+      const tablePrice = Number(p.license_prices?.[`${devices}-${years}`] ?? 0)
+      if (!tablePrice) {
+        return NextResponse.json(
+          { error: `${p.name} is not available for ${devices} device(s) and ${years} year(s)` },
+          { status: 400 }
+        )
+      }
+      unitPrice = tablePrice
     }
 
     total += unitPrice * qty

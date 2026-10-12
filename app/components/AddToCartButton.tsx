@@ -11,9 +11,11 @@ type Props = {
   image_url: string
   stock: number
   hasOptions?: boolean
+  prices?: Record<string, number> | null
 }
 
-const NUMBERS = Array.from({ length: 10 }, (_, i) => i + 1)
+const DEVICE_OPTIONS = Array.from({ length: 25 }, (_, i) => i + 1)
+const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => i + 1)
 
 export default function AddToCartButton({
   id,
@@ -22,12 +24,16 @@ export default function AddToCartButton({
   image_url,
   stock,
   hasOptions = false,
+  prices = null,
 }: Props) {
   const { addToCart } = useCart()
   const [devices, setDevices] = useState(1)
   const [years, setYears] = useState(1)
 
-  const unitPrice = hasOptions ? Number(price) * devices * years : Number(price)
+  const unitPrice = hasOptions
+    ? Number(prices?.[`${devices}-${years}`] ?? 0)
+    : Number(price)
+  const available = unitPrice > 0
 
   if (stock <= 0) {
     return (
@@ -41,6 +47,7 @@ export default function AddToCartButton({
   }
 
   function handleClick() {
+    if (!available) return
     addToCart({
       id,
       name,
@@ -63,7 +70,7 @@ export default function AddToCartButton({
                 onChange={(e) => setDevices(Number(e.target.value))}
                 className="mt-1 w-full border rounded px-3 py-2"
               >
-                {NUMBERS.map((n) => (
+                {DEVICE_OPTIONS.map((n) => (
                   <option key={n} value={n}>
                     {n} {n === 1 ? 'device' : 'devices'}
                   </option>
@@ -77,7 +84,7 @@ export default function AddToCartButton({
                 onChange={(e) => setYears(Number(e.target.value))}
                 className="mt-1 w-full border rounded px-3 py-2"
               >
-                {NUMBERS.map((n) => (
+                {YEAR_OPTIONS.map((n) => (
                   <option key={n} value={n}>
                     {n} {n === 1 ? 'year' : 'years'}
                   </option>
@@ -85,15 +92,22 @@ export default function AddToCartButton({
               </select>
             </label>
           </div>
-          <p className="text-lg font-semibold text-[#E27A12]">
-            Total: ₦{unitPrice.toLocaleString()}
-          </p>
+          {available ? (
+            <p className="text-lg font-semibold text-[#E27A12]">
+              Price: ₦{unitPrice.toLocaleString()}
+            </p>
+          ) : (
+            <p className="text-sm text-red-600">
+              This combination is not available. Please choose another.
+            </p>
+          )}
         </div>
       )}
 
       <button
         onClick={handleClick}
-        className="bg-[#E27A12] text-white px-6 py-3 rounded-lg hover:bg-[#c96a0f] transition font-medium"
+        disabled={!available}
+        className="bg-[#E27A12] text-white px-6 py-3 rounded-lg hover:bg-[#c96a0f] transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Add to Cart
       </button>
