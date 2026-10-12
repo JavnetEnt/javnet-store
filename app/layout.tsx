@@ -33,6 +33,9 @@ export const metadata: Metadata = {
     images: ['/logo.png'],
   },
   twitter: { card: 'summary_large_image' },
+  verification: {
+    google: 'fiF_6flyON5EMwu-A51tNtiXWFGbmnZ1FuiTK89GfUY',
+  },
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
