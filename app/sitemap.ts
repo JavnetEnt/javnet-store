@@ -17,10 +17,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${BASE}/?category=${c.slug}`,
   }))
 
-  const productPages: MetadataRoute.Sitemap = (products ?? []).map((p) => ({
+  const productPages: MetadataRoute.Sitemap = (products ?? []).map((p) => {
+  const date = p.created_at ? new Date(p.created_at) : null
+  return {
     url: `${BASE}/products/${p.id}`,
-    lastModified: new Date(p.created_at),
-  }))
+    ...(date && !isNaN(date.getTime()) ? { lastModified: date } : {}),
+  }
+})
 
   return [...pages, ...categoryPages, ...productPages]
 }
