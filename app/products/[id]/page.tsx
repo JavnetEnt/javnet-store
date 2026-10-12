@@ -69,6 +69,7 @@ export default async function ProductPage({
             name={product.name}
             price={product.base_price}
             image_url={product.image_url}
+            stock={product.stock_count ?? 0}
           />
         </div>
       </div>

@@ -152,6 +152,9 @@ if (searchTerm) query = query.ilike('name', `%${searchTerm}%`)
                 />
                 <h2 className="font-semibold mt-2 text-[#221610]">{product.name}</h2>
                 <p className="text-[#E27A12] font-medium">₦{Number(product.base_price).toLocaleString()}</p>
+                {(product.stock_count ?? 0) <= 0 && (
+  <p className="text-xs text-red-600 font-medium mt-1">Out of stock</p>
+)}
               </div>
             </Link>
           ))}

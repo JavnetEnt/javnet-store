@@ -8,10 +8,22 @@ type Props = {
   name: string
   price: number
   image_url: string
+  stock: number
 }
 
-export default function AddToCartButton({ id, name, price, image_url }: Props) {
+export default function AddToCartButton({ id, name, price, image_url, stock }: Props) {
   const { addToCart } = useCart()
+
+  if (stock <= 0) {
+    return (
+      <button
+        disabled
+        className="mt-6 bg-gray-300 text-gray-600 px-6 py-3 rounded-lg cursor-not-allowed font-medium"
+      >
+        Out of stock
+      </button>
+    )
+  }
 
   function handleClick() {
     addToCart({ id, name, price, image_url })

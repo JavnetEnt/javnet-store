@@ -113,11 +113,16 @@ export default function AdminPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this product?')) return
-    await supabase.from('products').delete().eq('id', id)
-    if (editingId === id) cancelEdit()
-    loadData()
+  if (!confirm('Delete this product?')) return
+  const { error } = await supabase.from('products').delete().eq('id', id)
+  if (error) {
+    setMessage('Could not delete: ' + error.message)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return
   }
+  if (editingId === id) cancelEdit()
+  loadData()
+}
 
   if (loading || !user || !isAdmin) {
     return <div className="p-6">Checking access...</div>
