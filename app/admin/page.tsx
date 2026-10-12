@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useAuth } from '@/lib/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 
 type Category = { id: string; name: string; parent_id: string | null }
 type Product = {
@@ -16,6 +16,7 @@ type Product = {
   brand: string
   image_url: string
   stock_count: number
+  has_license_options: boolean
 }
 
 export default function AdminPage() {
@@ -33,6 +34,7 @@ export default function AdminPage() {
   const [brand, setBrand] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [stockCount, setStockCount] = useState('')
+  const [hasOptions, setHasOptions] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -48,7 +50,10 @@ export default function AdminPage() {
   async function loadData() {
     const { data: cats } = await supabase.from('categories').select('*')
     setCategories(cats ?? [])
-    const { data: prods } = await supabase.from('products').select('*').order('created_at', { ascending: false })
+    const { data: prods } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false })
     setProducts(prods ?? [])
   }
 
@@ -61,6 +66,7 @@ export default function AdminPage() {
     setBrand(product.brand ?? '')
     setImageUrl(product.image_url ?? '')
     setStockCount(String(product.stock_count ?? 0))
+    setHasOptions(!!product.has_license_options)
     setMessage('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -74,6 +80,7 @@ export default function AdminPage() {
     setBrand('')
     setImageUrl('')
     setStockCount('')
+    setHasOptions(false)
     setMessage('')
   }
 
@@ -89,15 +96,19 @@ export default function AdminPage() {
       brand,
       image_url: imageUrl,
       stock_count: Number(stockCount) || 0,
+      has_license_options: hasOptions,
     }
 
     if (editingId) {
-      const { error } = await supabase.from('products').update(payload).eq('id', editingId)
+      const { error } = await supabase
+        .from('products')
+        .update(payload)
+        .eq('id', editingId)
       if (error) {
         setMessage('Error: ' + error.message)
       } else {
-        setMessage('Product updated!')
         cancelEdit()
+        setMessage('Product updated!')
         loadData()
       }
     } else {
@@ -105,24 +116,24 @@ export default function AdminPage() {
       if (error) {
         setMessage('Error: ' + error.message)
       } else {
-        setMessage('Product added!')
         cancelEdit()
+        setMessage('Product added!')
         loadData()
       }
     }
   }
 
   async function handleDelete(id: string) {
-  if (!confirm('Delete this product?')) return
-  const { error } = await supabase.from('products').delete().eq('id', id)
-  if (error) {
-    setMessage('Could not delete: ' + error.message)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-    return
+    if (!confirm('Delete this product?')) return
+    const { error } = await supabase.from('products').delete().eq('id', id)
+    if (error) {
+      setMessage('Could not delete: ' + error.message)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (editingId === id) cancelEdit()
+    loadData()
   }
-  if (editingId === id) cancelEdit()
-  loadData()
-}
 
   if (loading || !user || !isAdmin) {
     return <div className="p-6">Checking access...</div>
@@ -131,11 +142,11 @@ export default function AdminPage() {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-  <h1 className="text-xl font-bold">Admin — Manage Products</h1>
-  <Link href="/admin/orders" className="text-sm text-[#E27A12] hover:underline">
-    View Orders →
-  </Link>
-</div>
+        <h1 className="text-xl font-bold">Admin - Manage Products</h1>
+        <Link href="/admin/orders" className="text-sm text-[#E27A12] hover:underline">
+          View Orders
+        </Link>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-3 border p-4 rounded-lg mb-8">
         <h2 className="font-semibold">{editingId ? 'Edit Product' : 'Add New Product'}</h2>
@@ -147,15 +158,15 @@ export default function AdminPage() {
           className="w-full border rounded px-3 py-2"
         />
         <textarea
-         placeholder="Description (one point per line)"
-         value={description}
-         onChange={(e) => setDescription(e.target.value)}
-         rows={5}
-         className="w-full border rounded px-3 py-2"
+          placeholder="Description (one point per line)"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={5}
+          className="w-full border rounded px-3 py-2"
         />
         <input
           type="number"
-          placeholder="Price (₦)"
+          placeholder="Price"
           value={basePrice}
           onChange={(e) => setBasePrice(e.target.value)}
           required
@@ -169,27 +180,27 @@ export default function AdminPage() {
           className="w-full border rounded px-3 py-2"
         />
         <select
-  value={categoryId}
-  onChange={(e) => setCategoryId(e.target.value)}
-  required
-  className="w-full border rounded px-3 py-2"
->
-  <option value="">Select category</option>
-  {categories
-    .filter((cat: any) => !cat.parent_id)
-    .map((cat: any) => (
-      <optgroup key={cat.id} label={cat.name}>
-        <option value={cat.id}>{cat.name} (general)</option>
-        {categories
-          .filter((sub: any) => sub.parent_id === cat.id)
-          .map((sub: any) => (
-            <option key={sub.id} value={sub.id}>
-              {'  '}↳ {sub.name}
-            </option>
-          ))}
-      </optgroup>
-    ))}
-</select>
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          required
+          className="w-full border rounded px-3 py-2"
+        >
+          <option value="">Select category</option>
+          {categories
+            .filter((cat) => !cat.parent_id)
+            .map((cat) => (
+              <optgroup key={cat.id} label={cat.name}>
+                <option value={cat.id}>{cat.name} (general)</option>
+                {categories
+                  .filter((sub) => sub.parent_id === cat.id)
+                  .map((sub) => (
+                    <option key={sub.id} value={sub.id}>
+                      - {sub.name}
+                    </option>
+                  ))}
+              </optgroup>
+            ))}
+        </select>
         <input
           placeholder="Brand"
           value={brand}
@@ -202,8 +213,21 @@ export default function AdminPage() {
           onChange={(e) => setImageUrl(e.target.value)}
           className="w-full border rounded px-3 py-2"
         />
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={hasOptions}
+            onChange={(e) => setHasOptions(e.target.checked)}
+          />
+          Offer devices and years options (price = price for 1 device, 1 year)
+        </label>
+
         <div className="flex gap-2">
-          <button type="submit" className="bg-[#E27A12] text-white px-4 py-2 rounded-lg hover:bg-[#c96a0f] transition">
+          <button
+            type="submit"
+            className="bg-[#E27A12] text-white px-4 py-2 rounded-lg hover:bg-[#c96a0f] transition"
+          >
             {editingId ? 'Save Changes' : 'Add Product'}
           </button>
           {editingId && (
@@ -226,7 +250,8 @@ export default function AdminPage() {
             <div>
               <p className="font-medium">{p.name}</p>
               <p className="text-sm text-gray-600">
-                ₦{Number(p.base_price).toLocaleString()} · Stock: {p.stock_count ?? 0}
+                {Number(p.base_price).toLocaleString()} - Stock: {p.stock_count ?? 0}
+                {p.has_license_options ? ' - Devices/years options' : ''}
               </p>
             </div>
             <div className="flex gap-3">

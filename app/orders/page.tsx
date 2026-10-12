@@ -18,6 +18,8 @@ type OrderItem = {
   delivery_status: string
   tracking_number: string | null
   courier_name: string | null
+  devices: number | null
+years: number | null
 }
 
 type Order = {
@@ -107,6 +109,11 @@ export default function OrdersPage() {
                       <div className="flex justify-between text-gray-700">
                         <span>
                           {item.product_name} x {item.quantity}
+                          {item.devices && item.years && (
+  <span className="text-gray-500">
+    {' '}({item.devices} {item.devices === 1 ? 'device' : 'devices'}, {item.years} {item.years === 1 ? 'year' : 'years'})
+  </span>
+)}
                         </span>
                         <span>NGN {Number(item.price * item.quantity).toLocaleString()}</span>
                       </div>

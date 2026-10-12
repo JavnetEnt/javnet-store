@@ -26,7 +26,7 @@ function CallbackContent() {
         } else {
           setOrderId(data.orderId)
           setStatus('success')
-          items.forEach((item) => removeFromCart(item.id))
+          items.forEach((item) => removeFromCart(item.key))
         }
       })
       .catch(() => setStatus('error'))

@@ -90,6 +90,8 @@ const orderItems = metadata.items.map((item: any) => {
     quantity: item.quantity,
     price: item.price,
     is_software: isSoftware,
+    devices: item.devices ?? null,
+years: item.years ?? null,
   }
 })
 

@@ -23,7 +23,7 @@ export default function CartPage() {
 
       <div className="space-y-4">
         {items.map((item) => (
-          <div key={item.id} className="flex items-center gap-4 border-b pb-4">
+          <div key={item.key} className="flex items-center gap-4 border-b pb-4">
             <img
               src={item.image_url}
               alt={item.name}
@@ -31,24 +31,29 @@ export default function CartPage() {
             />
             <div className="flex-1">
               <h2 className="font-medium">{item.name}</h2>
+              {item.devices && item.years && (
+                <p className="text-xs text-gray-500">
+                  {item.devices} {item.devices === 1 ? 'device' : 'devices'}, {item.years} {item.years === 1 ? 'year' : 'years'}
+                </p>
+              )}
               <p className="text-gray-600">₦{Number(item.price).toLocaleString()}</p>
 
               <div className="flex items-center gap-2 mt-2">
                 <button
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                  onClick={() => updateQuantity(item.key, item.quantity - 1)}
                   className="border border-gray-300 px-2 rounded hover:border-[#E27A12] hover:text-[#E27A12] transition"
                 >
                   −
                 </button>
                 <span>{item.quantity}</span>
                 <button
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  onClick={() => updateQuantity(item.key, item.quantity + 1)}
                   className="border border-gray-300 px-2 rounded hover:border-[#E27A12] hover:text-[#E27A12] transition"
                 >
                   +
                 </button>
                 <button
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => removeFromCart(item.key)}
                   className="text-red-600 text-sm ml-4"
                 >
                   Remove

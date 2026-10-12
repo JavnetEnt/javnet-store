@@ -9,13 +9,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Your cart is empty' }, { status: 400 })
   }
 
-  const ids = items.map((i: any) => i.product_id)
+  const ids = Array.from(new Set(items.map((i: any) => i.product_id)))
   const { data: products } = await supabaseAdmin
     .from('products')
-    .select('id, name, base_price, stock_count')
-    .in('id', ids)
+    .select('id, name, base_price, stock_count, has_license_options')
+    .in('id', ids as string[])
 
+  const requested: Record<string, number> = {}
+  const cleanItems: any[] = []
   let total = 0
+
   for (const item of items) {
     const p = products?.find((x) => x.id === item.product_id)
     if (!p) {
@@ -24,13 +27,34 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    if ((p.stock_count ?? 0) < item.quantity) {
+
+    const qty = Math.max(1, Math.floor(Number(item.quantity) || 1))
+    requested[p.id] = (requested[p.id] ?? 0) + qty
+    if (requested[p.id] > (p.stock_count ?? 0)) {
       return NextResponse.json(
         { error: `${p.name} does not have enough stock for this order` },
         { status: 400 }
       )
     }
-    total += Number(p.base_price) * item.quantity
+
+    let unitPrice = Number(p.base_price)
+    let devices: number | null = null
+    let years: number | null = null
+    if (p.has_license_options) {
+      devices = Math.min(10, Math.max(1, Math.floor(Number(item.devices) || 1)))
+      years = Math.min(10, Math.max(1, Math.floor(Number(item.years) || 1)))
+      unitPrice = unitPrice * devices * years
+    }
+
+    total += unitPrice * qty
+    cleanItems.push({
+      product_id: p.id,
+      name: p.name,
+      quantity: qty,
+      price: unitPrice,
+      devices,
+      years,
+    })
   }
 
   const response = await fetch('https://api.paystack.co/transaction/initialize', {
@@ -42,7 +66,7 @@ export async function POST(req: NextRequest) {
     body: JSON.stringify({
       email,
       amount: Math.round(total * 100),
-      metadata,
+      metadata: { ...metadata, items: cleanItems },
       callback_url: `${req.nextUrl.origin}/checkout/callback`,
     }),
   })

@@ -20,6 +20,8 @@ type OrderItem = {
   delivery_status: string
   tracking_number: string | null
   courier_name: string | null
+  devices: number | null
+years: number | null
 }
 
 type Order = {
@@ -148,6 +150,11 @@ export default function AdminOrdersPage() {
                       <div className="flex justify-between text-sm">
                         <span>
                           {item.product_name} x {item.quantity}
+                          {item.devices && item.years && (
+  <span className="text-gray-500">
+    {' '}({item.devices} {item.devices === 1 ? 'device' : 'devices'}, {item.years} {item.years === 1 ? 'year' : 'years'})
+  </span>
+)}
                           {item.is_software && (
                             <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
                               Software

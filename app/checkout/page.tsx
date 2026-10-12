@@ -43,6 +43,8 @@ export default function CheckoutPage() {
             name: i.name,
             quantity: i.quantity,
             price: i.price,
+            devices: i.devices,
+            years: i.years,
           })),
         },
       }),

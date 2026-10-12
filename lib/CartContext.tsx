@@ -3,34 +3,43 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 
 type CartItem = {
+  key: string
   id: string
   name: string
   price: number
   image_url: string
   quantity: number
+  devices?: number
+  years?: number
 }
+
+type NewItem = Omit<CartItem, 'quantity' | 'key'>
 
 type CartContextType = {
   items: CartItem[]
-  addToCart: (item: Omit<CartItem, 'quantity'>) => void
-  removeFromCart: (id: string) => void
-  updateQuantity: (id: string, quantity: number) => void
+  addToCart: (item: NewItem) => void
+  removeFromCart: (key: string) => void
+  updateQuantity: (key: string, quantity: number) => void
   cartCount: number
   cartTotal: number
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
+function makeKey(item: NewItem) {
+  return `${item.id}|${item.devices ?? ''}|${item.years ?? ''}`
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [loaded, setLoaded] = useState(false)
 
-  // Load cart from localStorage on first render
   useEffect(() => {
     const saved = localStorage.getItem('javnet-cart')
     if (saved) {
       try {
-        setItems(JSON.parse(saved))
+        const parsed = JSON.parse(saved)
+        setItems(parsed.map((i: any) => ({ ...i, key: i.key ?? i.id })))
       } catch {
         // ignore corrupted data
       }
@@ -38,36 +47,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setLoaded(true)
   }, [])
 
-  // Save cart to localStorage whenever it changes (after initial load)
   useEffect(() => {
     if (loaded) {
       localStorage.setItem('javnet-cart', JSON.stringify(items))
     }
   }, [items, loaded])
 
-  function addToCart(item: Omit<CartItem, 'quantity'>) {
+  function addToCart(item: NewItem) {
+    const key = makeKey(item)
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === item.id)
+      const existing = prev.find((i) => i.key === key)
       if (existing) {
         return prev.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.key === key ? { ...i, quantity: i.quantity + 1 } : i
         )
       }
-      return [...prev, { ...item, quantity: 1 }]
+      return [...prev, { ...item, key, quantity: 1 }]
     })
   }
 
-  function removeFromCart(id: string) {
-    setItems((prev) => prev.filter((i) => i.id !== id))
+  function removeFromCart(key: string) {
+    setItems((prev) => prev.filter((i) => i.key !== key))
   }
 
-  function updateQuantity(id: string, quantity: number) {
+  function updateQuantity(key: string, quantity: number) {
     if (quantity <= 0) {
-      removeFromCart(id)
+      removeFromCart(key)
       return
     }
     setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, quantity } : i))
+      prev.map((i) => (i.key === key ? { ...i, quantity } : i))
     )
   }
 
