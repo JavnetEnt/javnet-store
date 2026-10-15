@@ -7,6 +7,7 @@ import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import TrustBadges from "@/app/components/TrustBadges";
 import Toast from "@/app/components/Toast";
+import TawkChat from "@/app/components/TawkChat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <main className="flex-1">{children}</main>
     <Footer />
     <Toast />
+    <TawkChat />
   </CartProvider>
 </AuthProvider>
       </body>
