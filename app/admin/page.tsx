@@ -22,6 +22,7 @@ type Product = {
 
 const DEVICE_ROWS = Array.from({ length: 25 }, (_, i) => i + 1)
 const YEAR_COLS = Array.from({ length: 5 }, (_, i) => i + 1)
+const ADMIN_PAGE_SIZE = 10
 
 export default function AdminPage() {
   const { user, isAdmin, loading } = useAuth()
@@ -42,6 +43,7 @@ export default function AdminPage() {
   const [prices, setPrices] = useState<Record<string, string>>({})
   const [pasteText, setPasteText] = useState('')
   const [message, setMessage] = useState('')
+  const [listPage, setListPage] = useState(1)
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) {
@@ -196,6 +198,20 @@ export default function AdminPage() {
     if (editingId === id) cancelEdit()
     loadData()
   }
+
+  const totalPages = Math.max(1, Math.ceil(products.length / ADMIN_PAGE_SIZE))
+const safePage = Math.min(listPage, totalPages)
+const firstIndex = (safePage - 1) * ADMIN_PAGE_SIZE
+const visibleProducts = products.slice(firstIndex, firstIndex + ADMIN_PAGE_SIZE)
+
+const pageNumbers: (number | '...')[] = []
+for (let i = 1; i <= totalPages; i++) {
+  if (i === 1 || i === totalPages || Math.abs(i - safePage) <= 1) {
+    pageNumbers.push(i)
+  } else if (pageNumbers[pageNumbers.length - 1] !== '...') {
+    pageNumbers.push('...')
+  }
+}
 
   if (loading || !user || !isAdmin) {
     return <div className="p-6">Checking access...</div>
@@ -387,7 +403,7 @@ export default function AdminPage() {
 
       <h2 className="font-semibold mb-3">Existing Products</h2>
       <div className="space-y-2">
-        {products.map((p) => (
+        {visibleProducts.map((p) => (
           <div key={p.id} className="flex justify-between items-center border p-3 rounded">
             <div>
               <p className="font-medium">{p.name}</p>
@@ -411,8 +427,56 @@ export default function AdminPage() {
               </button>
             </div>
           </div>
-        ))}
+          ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-6">
+          <p className="text-center text-xs text-gray-500 mb-2">
+            Showing {firstIndex + 1}-{Math.min(firstIndex + ADMIN_PAGE_SIZE, products.length)} of {products.length}
+          </p>
+          <div className="flex flex-wrap justify-center items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setListPage(Math.max(1, safePage - 1))}
+              disabled={safePage === 1}
+              className="px-3 py-1 rounded border text-sm hover:border-[#E27A12] hover:text-[#E27A12] disabled:opacity-40 disabled:pointer-events-none"
+            >
+              Prev
+            </button>
+
+            {pageNumbers.map((n, i) =>
+              n === '...' ? (
+                <span key={`dots-${i}`} className="px-1 text-gray-400">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setListPage(n)}
+                  className={`px-3 py-1 rounded border text-sm ${
+                    n === safePage
+                      ? 'bg-[#221610] text-white border-[#221610]'
+                      : 'hover:border-[#E27A12] hover:text-[#E27A12]'
+                  }`}
+                >
+                  {n}
+                </button>
+              )
+            )}
+
+            <button
+              type="button"
+              onClick={() => setListPage(Math.min(totalPages, safePage + 1))}
+              disabled={safePage === totalPages}
+              className="px-3 py-1 rounded border text-sm hover:border-[#E27A12] hover:text-[#E27A12] disabled:opacity-40 disabled:pointer-events-none"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
