@@ -40,6 +40,7 @@ export default function AdminBlogPage() {
   const [imageUrl, setImageUrl] = useState('')
   const [content, setContent] = useState('')
   const [published, setPublished] = useState(true)
+  const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -89,6 +90,55 @@ export default function AdminBlogPage() {
     if (!slugTouched) setSlug(slugify(value))
   }
 
+  async function uploadImage(file: File): Promise<string | null> {
+    setMessage('')
+    if (!file.type.startsWith('image/')) {
+      setMessage('Choose an image file.')
+      return null
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setMessage('That image is over 3 MB. Shrink it first, then try again.')
+      return null
+    }
+
+    setUploading(true)
+    const ext =
+      file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+
+    const { error } = await supabase.storage
+      .from('blog-images')
+      .upload(path, file, { contentType: file.type })
+    setUploading(false)
+
+    if (error) {
+      setMessage('Upload failed: ' + error.message)
+      return null
+    }
+    return supabase.storage.from('blog-images').getPublicUrl(path).data.publicUrl
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const url = await uploadImage(file)
+    if (url) setImageUrl(url)
+  }
+
+  async function handleBodyUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const url = await uploadImage(file)
+    if (url) {
+      setContent(
+        (prev) => `${prev}${prev ? '\n\n' : ''}![Describe the image](${url})\n\n`
+      )
+      setMessage('Image added at the end of the post. Change the words in the square brackets to describe it, and move the line where you want it.')
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setMessage('')
@@ -121,8 +171,9 @@ export default function AdminBlogPage() {
       return
     }
 
+    const wasEditing = !!editingId
     resetForm()
-    setMessage(editingId ? 'Post updated.' : 'Post saved.')
+    setMessage(wasEditing ? 'Post updated.' : 'Post saved.')
     loadPosts()
   }
 
@@ -175,20 +226,51 @@ export default function AdminBlogPage() {
           rows={2}
           className="w-full border rounded px-3 py-2"
         />
-        <input
-          placeholder="Cover image URL (optional)"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-        />
-        <textarea
-          placeholder={'Write your post here.\n\nStart a line with ## for a heading.\n\n- Start lines with a dash for a bullet list.'}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-          rows={14}
-          className="w-full border rounded px-3 py-2"
-        />
+
+        <div className="space-y-2">
+          <input
+            placeholder="Cover image web address (or upload one below)"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          />
+          <div className="flex items-center gap-3 text-sm">
+            <label className="border px-3 py-1 rounded cursor-pointer hover:border-[#E27A12] hover:text-[#E27A12]">
+              Upload cover image
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleCoverUpload}
+                className="hidden"
+              />
+            </label>
+            {imageUrl && (
+              <img src={imageUrl} alt="Cover preview" className="h-12 rounded border" />
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <textarea
+            placeholder={'Write your post here.\n\nStart a line with ## for a heading.\n\n- Start lines with a dash for a bullet list.'}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+            rows={14}
+            className="w-full border rounded px-3 py-2"
+          />
+          <label className="inline-block border px-3 py-1 rounded cursor-pointer text-sm hover:border-[#E27A12] hover:text-[#E27A12]">
+            Add an image to the post
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleBodyUpload}
+              className="hidden"
+            />
+          </label>
+          {uploading && <span className="ml-3 text-sm text-gray-500">Uploading...</span>}
+        </div>
+
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -201,7 +283,8 @@ export default function AdminBlogPage() {
         <div className="flex gap-2">
           <button
             type="submit"
-            className="bg-[#E27A12] text-white px-4 py-2 rounded-lg hover:bg-[#c96a0f] transition"
+            disabled={uploading}
+            className="bg-[#E27A12] text-white px-4 py-2 rounded-lg hover:bg-[#c96a0f] transition disabled:opacity-50"
           >
             {editingId ? 'Save changes' : 'Publish post'}
           </button>

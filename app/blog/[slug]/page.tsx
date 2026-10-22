@@ -46,6 +46,18 @@ function renderContent(content: string) {
     const text = block.trim()
     if (!text) return null
 
+    const imageMatch = text.match(/^!\[([^\]]*)\]\((https:\/\/[^\s)]+)\)$/)
+    if (imageMatch) {
+      return (
+        <img
+          key={i}
+          src={imageMatch[2]}
+          alt={imageMatch[1]}
+          className="w-full rounded-lg my-6"
+        />
+      )
+    }
+
     if (text.startsWith('## ')) {
       return (
         <h2 key={i} className="text-xl font-bold text-[#221610] mt-8 mb-3">
