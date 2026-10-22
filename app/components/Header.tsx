@@ -151,11 +151,15 @@ export default function Header() {
               )}
             </div>
 
-            {user && (
-              <Link href="/orders" className="hover:text-[#E27A12] transition">
-                Orders
-              </Link>
-            )}
+          <Link href="/blog" className="hover:text-[#E27A12] transition">
+  Blog
+</Link>
+
+{user && (
+  <Link href="/orders" className="hover:text-[#E27A12] transition">
+    Orders
+  </Link>
+)}
           </nav>
 
           <form

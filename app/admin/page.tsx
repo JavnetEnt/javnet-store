@@ -203,12 +203,14 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold">Admin - Manage Products</h1>
-        <Link href="/admin/orders" className="text-sm text-[#E27A12] hover:underline">
-          View Orders
-        </Link>
-      </div>
+      <div className="flex gap-4">
+  <Link href="/admin/blog" className="text-sm text-[#E27A12] hover:underline">
+    Manage Blog
+  </Link>
+  <Link href="/admin/orders" className="text-sm text-[#E27A12] hover:underline">
+    View Orders
+  </Link>
+</div>
 
       <form onSubmit={handleSubmit} className="space-y-3 border p-4 rounded-lg mb-8">
         <h2 className="font-semibold">{editingId ? 'Edit Product' : 'Add New Product'}</h2>
